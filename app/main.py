@@ -1,3 +1,4 @@
+# recommend/app/main.py
 from fastapi import FastAPI, HTTPException, Path
 from typing import List
 import httpx
@@ -17,21 +18,27 @@ async def get_recommendations(
         result = cosine_recsys.run_recommendation(
             user_id=user_id,
             top_n=top_n,
-            product_path="/data/product.json",
-            brand_path="/data/brand.json"
+            product_path="/app/data/product.json",
+            brand_path="/app/data/brand.json"
         )
         product_ids = result["product_id"]
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"추천 모델 에러: {e}")
 
-    # 2) 사용자 계정 정보 조회 (생략 가능)
-    try:
-        async with httpx.AsyncClient() as client:
-            user_resp = await client.get(f"http://gateway:8000/user/{user_id}")
-            user_resp.raise_for_status()
-            user_data = user_resp.json()
-            user_account = user_data.get("account", user_id)
-    except Exception:
+    # # 2) 사용자 계정 정보 조회 (생략 가능)
+    # try:
+    #     async with httpx.AsyncClient() as client:
+    #         user_resp = await client.get(f"http://gateway:8000/user/{user_id}")
+    #         user_resp.raise_for_status()
+    #         user_data = user_resp.json()
+    #         user_account = user_data.get("account", user_id)
+    # except Exception:
+    #     user_account = user_id
+    if user_id == "b50b7a33-902f-420b-afa9-8f90b99cddf9":
+        user_account = "홍길동"
+    elif user_id == "guest":
+        user_account = "비회원"
+    else:
         user_account = user_id
 
     # 3) bulk 엔드포인트 호출

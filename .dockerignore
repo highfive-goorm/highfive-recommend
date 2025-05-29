@@ -1,0 +1,63 @@
+# Git files
+.git
+.gitignore
+
+# Python virtual environment
+# (만약 로컬에서 venv, env 등의 이름으로 가상환경을 사용한다면)
+venv/
+env/
+.venv/
+
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# IDE / Editor specific files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS specific files
+.DS_Store
+Thumbs.db
+
+# Node.js / Yarn / npm specific files
+# (현재 프로젝트에 node_modules가 있는 것으로 보아, Django 프로젝트에서
+#  프론트엔드 빌드나 특정 Node.js 도구를 사용하지 않는다면 제외하는 것이 좋습니다.
+#  만약 Docker 빌드 과정에서 Node.js가 필요하다면, 이 부분은 상황에 맞게 조절해야 합니다.)
+node_modules/
+package.json
+yarn.lock
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+
+# Test files (이미지에 포함할 필요가 없다면)
+test_user.py
+tests.py
+
+# Local settings / environment files
+*.sqlite3
+*.db
+local_settings.py
+.env
+
+# Coverage reports
+.coverage
+coverage.xml
+htmlcov/
+
+# Build artifacts (if any, not common for typical Django)
+dist/
+build/
+*.egg-info/
+
+# Other specific files or directories to ignore
+# logs/  (만약 로컬 로그 디렉토리가 있다면)
+# media/ (만약 업로드 파일 테스트용 로컬 media 폴더가 있다면)
+# staticfiles_collected/ (만약 collectstatic 결과물이 소스코드에 커밋된다면. Dockerfile에서 RUN collectstatic 하는게 일반적)
