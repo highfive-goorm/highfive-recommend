@@ -14,6 +14,10 @@ app = FastAPI(debug=True)
 PRODUCT_BASE_URL = os.environ["PRODUCT_BASE_URL"]
 bulk_url = f"{PRODUCT_BASE_URL}/bulk"
 
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+PRODUCT_JSON = os.path.join(BASE_DIR, "data", "product.json")
+BRAND_JSON = os.path.join(BASE_DIR, "data", "brand.json")
+
 @app.get("/recommend/{user_id}", response_model=RecommendResponse)
 async def get_recommendations(
     user_id: str = Path(..., description="추천 대상 사용자 ID"),
@@ -25,8 +29,8 @@ async def get_recommendations(
         result = cosine_recsys.run_recommendation(
             user_id=user_id,
             top_n=top_n,
-            product_path="../data/product.json",
-            brand_path="../data/brand.json"
+            product_path=PRODUCT_JSON,
+            brand_path=BRAND_JSON
         )
         product_ids = result["product_id"]
     except Exception as e:
