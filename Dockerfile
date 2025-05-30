@@ -22,6 +22,7 @@ RUN pip install --no-cache-dir --upgrade pip \
 
 # 애플리케이션 소스 코드 복사
 COPY app/ ./app/
+COPY data/ ./data/
 
 # Non-root 사용자 생성 및 설정
 RUN useradd --system --create-home appuser && \
