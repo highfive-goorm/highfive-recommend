@@ -18,6 +18,10 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PRODUCT_JSON = os.path.join(BASE_DIR, "data", "product.json")
 BRAND_JSON = os.path.join(BASE_DIR, "data", "brand.json")
 
+@app.get("/health", status_code=200)
+async def health_check():
+    return {"status": "ok"}
+
 @app.get("/recommend/{user_id}", response_model=RecommendResponse)
 async def get_recommendations(
     user_id: str = Path(..., description="추천 대상 사용자 ID"),
