@@ -108,7 +108,7 @@ def load_data(
             return pd.read_csv(path, dtype={'category_code': str})
         elif ext == '.json':
             # 줄 단위 JSON 읽어오는 코드
-            return pd.read_json(path, dtype={'category_code': str})
+            return pd.read_json(path, dtype={'category_code': str}, lines=True)
         else:
             raise ValueError(f"지원하지 않는 파일 형식: {ext}")
         

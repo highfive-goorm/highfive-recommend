@@ -52,7 +52,7 @@ async def get_recommendations(
     #         user_account = user_data.get("account", user_id)
     # except Exception:
     #     user_account = user_id
-    if user_id == "b50b7a33-902f-420b-afa9-8f90b99cddf9":
+    if user_id == "94b73865-5469-4c46-87ac-7737080906a0":
         user_account = "홍길동"
     elif user_id == "guest":
         user_account = "비회원"
