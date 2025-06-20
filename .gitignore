@@ -1,0 +1,68 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtualenv
+venv/
+ENV/
+env/
+*.env
+
+# Django specific
+*.sqlite3
+db.sqlite3
+*.log
+*.pot
+*.pyc
+
+# Static/media files
+/staticfiles/
+/media/
+/static/
+/dist/
+/build/
+
+# IDE/Editor settings
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Migrations (optional: you may want to version control these)
+**/migrations/__pycache__/
+**/migrations/*.pyc
+**/migrations/*.pyo
+# If you want to ignore migration files entirely (use with caution):
+**/migrations/*.py
+
+# Coverage/test files
+htmlcov/
+.coverage
+.tox/
+nosetests.xml
+*.cover
+
+# MyPy, Pyright, etc.
+.mypy_cache/
+.pyright/
+
+# Jupyter Notebook Checkpoints
+.ipynb_checkpoints/
+
+# Docker
+*.pid
+*.tar
+*.gz
+
+# Local environment
+.env.local
+.env.dev
+.env.prod
+
+# Log
+host-logs/
