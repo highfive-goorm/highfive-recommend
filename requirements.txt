@@ -1,9 +1,11 @@
 fastapi==0.111.0
 uvicorn==0.34.2
 pydantic==2.11.4
-category_encoders==2.8.1
-numpy==2.2.5
-pandas==2.2.3
-scikit-learn==1.6.1
+category_encoders==2.6.3
+numpy==1.26.4
+pandas==2.2.3 # numpy 1.26.4와 호환
+scikit-learn==1.5.1
 httpx==0.24.0
 python-dotenv==1.0.1
+scipy==1.13.1 # scikit-learn, statsmodels와 호환
+statsmodels==0.14.2 # category_encoders의 의존성이며, scipy 1.13.1과 호환

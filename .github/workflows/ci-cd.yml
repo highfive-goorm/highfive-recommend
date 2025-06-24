@@ -44,7 +44,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           WITH_V: false
           DEFAULT_BUMP: patch
-          CUSTOM_TAG_SCHEME: "feat:minor"
+          MINOR_STRING_TOKEN: 'feat'
 
       - name: Build image just for logging
         run: |
@@ -162,13 +162,13 @@ jobs:
           path: 'config-repo'
       - name: Update manifest file
         run: |
-          sed -i -E "s|^(\s*image:\s*).*|\1326536620954.dkr.ecr.ap-northeast-2.amazonaws.com/highfive/highfive-recommend:${{ needs.build.outputs.version_tag }}|" config-repo/highfive-recommend-service.yaml
+          sed -i -E "s|^(\s*image:\s*).*|\1326536620954.dkr.ecr.ap-northeast-2.amazonaws.com/highfive/highfive-recommend:${{ needs.build.outputs.version_tag }}|" config-repo/recommend/highfive-recommend-service.yaml
       - name: Commit and push changes
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "Deploy image ${{ needs.build.outputs.version_tag }} for highfive-recommend-service"
           repository: 'config-repo'
-          file_pattern: 'highfive-recommend-service.yaml'
+          file_pattern: 'recommend/highfive-recommend-service.yaml'
 
   # ==========================================================
   # JOB 6: 워크플로우 실패 시 알림

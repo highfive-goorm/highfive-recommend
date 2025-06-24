@@ -1,8 +1,6 @@
 import os
 import numpy as np  
-import pandas as pd  
-# import logging       
-# import argparse      
+import pandas as pd
 
 from sklearn.pipeline import Pipeline
 from sklearn.compose import ColumnTransformer
@@ -233,49 +231,6 @@ def evaluate_semantic_similarity(
     # 모든 쿼리에 대한 Precision@K, Recall@K 평균값 반환
     return {f'Precision@{K}': np.nanmean(precisions), f'Recall@{K}': np.nanmean(recalls)}
 
-def run_recommendation(
-    user_id: str,
-    top_n: int,
-    product_path: str,
-    brand_path: str
-) -> dict:
-    """
-    사용자(user_id)에 대해 top_n개의 상품 추천 결과를 반환합니다.
-    Args:
-      - user_id (str): 사용자 고유 ID (시드로 사용)
-      - top_n (int): 추천할 상품 개수
-      - product_path, brand_path (str): 데이터 파일 경로
-    Returns:
-      - dict: {"user_id": ..., "product_id": [...]} 형태
-    """
-    # 1) 데이터 로드
-    df = load_data(product_path, brand_path)
-
-    # 2) 전처리 및 feature matrix 생성
-    preprocessor = build_preprocessor(
-        discount_cols=['discount', 'rank'],
-        view_buy_cols=['like_count','view_count','like_count_brand'],
-        price_cols=['discounted_price','price'],
-        low_cat_cols=['gender','category_code'],
-        high_cat_cols=['brand_eng']
-    )
-    feature_matrix = compute_feature_matrix(df, preprocessor)
-
-    # 3) 코사인 유사도 계산
-    cosine_sim = compute_cosine_similarity(feature_matrix)
-
-    # 4) user_id 해시로 시드 고정 → 랜덤 인덱스 선택
-    seed = int(hash(user_id) % (2**32))
-    rng = np.random.default_rng(seed)
-    item_index = rng.integers(0, feature_matrix.shape[0])
-
-    # 5) 추천 실행
-    recs = recommend_items(df, cosine_sim, item_index=item_index, top_n=top_n)
-    return {
-      "user_id": user_id,
-      "product_id": recs["id"].tolist()
-    }
-
 # def main():
 #     """
 #     스크립트 진입점:
@@ -341,3 +296,53 @@ def run_recommendation(
 
 # if __name__ == '__main__':
 #     main()
+
+# --- 최적화: 모델 로딩과 추천 로직 분리 ---
+
+class Recommender:
+    def __init__(self, product_path: str, brand_path: str):
+        """
+        서버 시작 시 한 번만 호출되어 데이터 로딩 및 모델 생성을 수행합니다.
+        """
+        print("데이터 로딩 및 전처리를 시작합니다...")
+        # 1) 데이터 로드
+        self.df = load_data(product_path, brand_path)
+
+        # 2) 전처리 및 feature matrix 생성
+        preprocessor = build_preprocessor(
+            discount_cols=['discount', 'rank'],
+            view_buy_cols=['like_count','view_count','like_count_brand'],
+            price_cols=['discounted_price','price'],
+            low_cat_cols=['gender','category_code'],
+            high_cat_cols=['brand_eng']
+        )
+        feature_matrix = compute_feature_matrix(self.df, preprocessor)
+
+        # 3) 코사인 유사도 계산 및 클래스 변수로 저장
+        self.cosine_sim = compute_cosine_similarity(feature_matrix)
+        self.feature_matrix_shape = feature_matrix.shape
+        print(f"모델 초기화가 완료되었습니다. (유사도 행렬: {self.cosine_sim.shape})")
+
+    def recommend(self, user_id: str, top_n: int) -> dict:
+        """
+        미리 계산된 모델을 사용하여 가볍고 빠르게 추천 결과를 반환합니다.
+        """
+        # 1) user_id 해시로 시드 고정 → 랜덤 인덱스 선택
+        seed = int(hash(user_id) % (2**32))
+        rng = np.random.default_rng(seed)
+        item_index = rng.integers(0, self.feature_matrix_shape[0])
+
+        # 2) 추천 실행
+        recs = recommend_items(self.df, self.cosine_sim, item_index=item_index, top_n=top_n)
+        
+        return {
+            "user_id": user_id,
+            "product_id": recs["id"].tolist()
+        }
+
+def initialize_system(product_path: str, brand_path: str) -> Recommender:
+    """
+    Recommender 객체를 생성하여 반환하는 팩토리 함수입니다.
+    main.py의 lifespan에서 이 함수를 호출합니다.
+    """
+    return Recommender(product_path, brand_path)

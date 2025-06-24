@@ -1,4 +1,5 @@
 # recommend/app/main.py
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, Path
 from typing import List
 import httpx
@@ -10,7 +11,23 @@ from . import cosine_recsys
 from dotenv import load_dotenv
 load_dotenv()
 
-app = FastAPI(debug=True)
+# --- 최적화: Lifespan을 이용한 모델 사전 로딩 ---
+model_cache = {}
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # 애플리케이션 시작 시 모델 로드
+    print("추천 시스템 초기화를 시작합니다...")
+    model_cache["recsys"] = cosine_recsys.initialize_system(
+        product_path=PRODUCT_JSON,
+        brand_path=BRAND_JSON
+    )
+    print("추천 시스템이 준비되었습니다.")
+    yield
+    # 애플리케이션 종료 시 리소스 정리
+    model_cache.clear()
+
+app = FastAPI(debug=True, lifespan=lifespan)
 PRODUCT_BASE_URL = os.environ["PRODUCT_BASE_URL"]
 bulk_url = f"{PRODUCT_BASE_URL}/bulk"
 
@@ -30,11 +47,13 @@ async def get_recommendations(
     print("start of get recommend/user_id")
     # 1) 추천 ID 리스트
     try:
-        result = cosine_recsys.run_recommendation(
+        recsys = model_cache.get("recsys")
+        if not recsys:
+            raise HTTPException(status_code=503, detail="추천 시스템이 아직 준비되지 않았습니다.")
+        
+        result = recsys.recommend(
             user_id=user_id,
-            top_n=top_n,
-            product_path=PRODUCT_JSON,
-            brand_path=BRAND_JSON
+            top_n=top_n
         )
         product_ids = result["product_id"]
     except Exception as e:
