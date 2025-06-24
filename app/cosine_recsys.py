@@ -138,7 +138,9 @@ def compute_feature_matrix(
     Returns:
         np.ndarray: 변환된 피처 매트릭스 (n_samples × n_features)
     """
-    return preprocessor.fit_transform(df)
+    # 해결 방안 1: feature_matrix를 float32로 변환하여 메모리 사용량 감소
+    feature_matrix = preprocessor.fit_transform(df)
+    return feature_matrix.astype(np.float32)
 
 
 def compute_cosine_similarity(
@@ -308,7 +310,8 @@ class Recommender:
         # 1) 데이터 로드
         self.df = load_data(product_path, brand_path)
 
-        # 2) 전처리 및 feature matrix 생성
+        # 해결 방안 2: 유사도 행렬 대신 피처 행렬만 저장하여 메모리 최적화
+        # 2) 전처리 및 feature matrix 생성 및 저장
         preprocessor = build_preprocessor(
             discount_cols=['discount', 'rank'],
             view_buy_cols=['like_count','view_count','like_count_brand'],
@@ -316,24 +319,27 @@ class Recommender:
             low_cat_cols=['gender','category_code'],
             high_cat_cols=['brand_eng']
         )
-        feature_matrix = compute_feature_matrix(self.df, preprocessor)
-
-        # 3) 코사인 유사도 계산 및 클래스 변수로 저장
-        self.cosine_sim = compute_cosine_similarity(feature_matrix)
-        self.feature_matrix_shape = feature_matrix.shape
-        print(f"모델 초기화가 완료되었습니다. (유사도 행렬: {self.cosine_sim.shape})")
+        self.feature_matrix = compute_feature_matrix(self.df, preprocessor)
+        
+        # self.cosine_sim은 더 이상 저장하지 않음
+        print(f"모델 초기화가 완료되었습니다. (피처 행렬: {self.feature_matrix.shape})")
 
     def recommend(self, user_id: str, top_n: int) -> dict:
         """
         미리 계산된 모델을 사용하여 가볍고 빠르게 추천 결과를 반환합니다.
         """
-        # 1) user_id 해시로 시드 고정 → 랜덤 인덱스 선택
+        # 1) user_id 해시로 시드 고정 → 기준 아이템의 랜덤 인덱스 선택
         seed = int(hash(user_id) % (2**32))
         rng = np.random.default_rng(seed)
-        item_index = rng.integers(0, self.feature_matrix_shape[0])
+        item_index = rng.integers(0, self.feature_matrix.shape[0])
 
-        # 2) 추천 실행
-        recs = recommend_items(self.df, self.cosine_sim, item_index=item_index, top_n=top_n)
+        # 2) 해결 방안 2: 필요한 유사도만 실시간으로 계산
+        # 기준 아이템의 피처 벡터와 전체 피처 행렬 간의 코사인 유사도 계산
+        item_vector = self.feature_matrix[item_index, :].reshape(1, -1)
+        live_cosine_sim = cosine_similarity(item_vector, self.feature_matrix)
+
+        # 3) 추천 실행 (실시간 계산된 유사도 점수 사용)
+        recs = recommend_items(self.df, live_cosine_sim, item_index=0, top_n=top_n)
         
         return {
             "user_id": user_id,
